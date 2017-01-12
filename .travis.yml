@@ -1,0 +1,12 @@
+language: csharp
+mono:
+  - latest
+  - 3.12.0
+  - 3.10.0
+  - 3.8.0
+after_script:
+  - codeclimate-test-reporter < coverage/lcov.info
+addons:
+  code_climate:
+    repo_token:
+      secure: ""

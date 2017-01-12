@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>NatLibFi.Voyager.BatchCatEdge.Sources</id>
+    <version>1.0.0</version>
+    <authors>natlibfi</authors>
+    <owners>natlibfi</owners>
+    <licenseUrl>https://raw.githubusercontent.com/natlibfi/voyager-batchcat-edge-cs/master/LICENSE.txt</licenseUrl>
+    <projectUrl>https://github.com/natlibfi/voyager-batchcat-edge-cs</projectUrl>
+    <iconUrl>https://raw.githubusercontent.com/natlibfi/voyager-batchcat-edge-cs/master/content/icon.png</iconUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <title>Voyager BatchCat for Edge.js</title>
+    <summary>Voyager BatchCat API for Edge.js</summary>
+    <description>C# API for Voyager BatchCat DLL to use with Edge.js</description>
+    <copyright>Copyright (c) 2017 University Of Helsinki (The National Library Of Finland)</copyright>
+    <tags>Voyager ExLibris BatchCat MARC Record Edge Bibliography Bibliographic Library Libraries</tags>
+    <frameworkAssemblies>
+      <frameworkAssembly assemblyName="System.Threading.Tasks" />
+    </frameworkAssemblies>
+    <dependencies>
+      <dependency id="Mono.Gendarme" version="[2.11.0.20121120]" />
+      <dependency id="NuGet.Packaging" version="[3.5.0]" />
+    </dependencies>
+  </metadata>
+</package>
