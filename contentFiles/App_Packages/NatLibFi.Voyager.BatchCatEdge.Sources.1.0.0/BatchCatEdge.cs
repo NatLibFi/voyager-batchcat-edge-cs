@@ -17,6 +17,7 @@
 namespace NatLibFi.Voyager {
 
   using System;
+  using System.Text;
   using System.Threading.Tasks;
   using BatchCat;
 
@@ -32,7 +33,7 @@ namespace NatLibFi.Voyager {
     }
   }
   
-  class BatchCatEdge {
+  public class BatchCatEdge {
 
     private ClassBatchCat GetBatchCat(string ini_dir, string username, string password) {
 
@@ -54,7 +55,7 @@ namespace NatLibFi.Voyager {
       AddBibReturnCode retval;
       ClassBatchCat bc;
       int recordId;
-      string recordData = input.recordData;
+      string recordData = Encoding.GetEncoding(1252).GetString(Encoding.UTF8.GetBytes(input.recordData));
       int library = input.library;
       int catLocation = input.catLocation;
       bool opacSuppress = input.opacSuppress;
