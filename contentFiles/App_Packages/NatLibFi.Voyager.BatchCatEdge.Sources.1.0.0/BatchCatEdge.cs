@@ -50,7 +50,7 @@ namespace NatLibFi.Voyager {
     }
 
     #pragma warning disable CS1998
-    public async Task<object> AddBibRecord(dynamic input) {
+      public async Task<object> AddBibRecord(dynamic input) {
     
       AddBibReturnCode retval;
       ClassBatchCat bc;
@@ -71,15 +71,15 @@ namespace NatLibFi.Voyager {
       
       if (retval == 0) {
         bc.get_RecordIDAdded(out recordId);
-	return new { recordId = recordId.ToString() };
+        return new { recordId = recordId.ToString() };
       } else {
-	return new { error = new { code = (int)retval, message = retval } };
+        return new { error = new { code = (int)retval, message = retval } };
       }
      
     }
 
     #pragma warning disable CS1998
-    public async Task<object> UpdateBibRecord(dynamic input) {
+      public async Task<object> UpdateBibRecord(dynamic input) {
 
       UpdateBibReturnCode retval;
       ClassBatchCat bc; 
@@ -104,7 +104,7 @@ namespace NatLibFi.Voyager {
     }
     
     #pragma warning disable CS1998
-    public async Task<object> DeleteBibRecord(dynamic input) {
+      public async Task<object> DeleteBibRecord(dynamic input) {
     
       DeleteBibReturnCode retval;
       ClassBatchCat bc;
