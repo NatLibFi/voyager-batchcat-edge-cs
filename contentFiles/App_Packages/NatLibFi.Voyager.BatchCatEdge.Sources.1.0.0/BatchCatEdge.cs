@@ -84,7 +84,7 @@ namespace NatLibFi.Voyager {
       UpdateBibReturnCode retval;
       ClassBatchCat bc; 
       int recordId = input.recordId;
-      string recordData = input.recordData;
+      string recordData = Encoding.GetEncoding(1252).GetString(Encoding.UTF8.GetBytes(input.recordData));
       DateTime updateDate = DateTime.Parse(input.updateDate);
       int library = input.library;
       int catLocation = input.catLocation;
