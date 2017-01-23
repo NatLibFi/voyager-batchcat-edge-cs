@@ -17,43 +17,97 @@
 namespace NatLibFi.Voyager {
 
   using System;
+  using System.Collections.Generic;
   using System.Text;
   using System.Threading.Tasks;
   using BatchCat;
-
-  class BatchCatConnectException : System.Exception {
+  
+  class ConnectException : System.Exception {
 
     private int ErrorCodeInternal;
     public int ErrorCode {
       get { return this.ErrorCodeInternal; }
     }
     
-    public BatchCatConnectException(string message, int error_code) : base(message) {
+    public ConnectException(string message, int error_code) : base(message) {
       this.ErrorCodeInternal = error_code;
     }
+  }
+
+  class Session {
+
+    public ClassBatchCat bc;
+    public DateTime time;
+    
+    public Session(string iniDir, string username, string password) {
+
+      ConnectReturnCodes retval;
+
+      this.bc = new ClassBatchCat();
+      this.bc.Connect(ref iniDir, ref username, ref password, out retval);
+      
+      if ((int)retval == 0) {
+        this.time = DateTime.Now;
+      } else {
+        throw new ConnectException(retval.ToString(), (int)retval);
+      }
+
+    }
+    
   }
   
   public class BatchCatEdge {
 
-    private ClassBatchCat GetBatchCat(string ini_dir, string username, string password) {
+    // 60 minutes
+    public const int defaultSessionTimeoutMillis = 3600000;
+    private int sessionTimeoutMillis = defaultSessionTimeoutMillis;
+    private static Dictionary<string, Session> sessions = new Dictionary<string, Session>();
 
-      ClassBatchCat bc = new ClassBatchCat();
-      ConnectReturnCodes retval;
-      bc.Connect(ref ini_dir, ref username, ref password, out retval);
+    private void RemoveExpiredSessions() {
 
-      if ((int)retval == 0) {
-        return bc;
-      } else {
-        throw new BatchCatConnectException(retval.ToString(), (int)retval);
+      List<string> expiredSessions = new List<string>();
+    
+      foreach (KeyValuePair<string, Session> pair in BatchCatEdge.sessions) {
+        if (DateTime.Now.Subtract(pair.Value.time).TotalMilliseconds > this.sessionTimeoutMillis) {
+          expiredSessions.Add(pair.Key);
+        }
       }
+      
+      expiredSessions.ForEach(item => { BatchCatEdge.sessions.Remove(item); });
       
     }
 
+    private Session GetSession(string iniDir, string username, string password) {
+
+      Session session;
+      string key = iniDir + ":" + username;
+      
+      this.RemoveExpiredSessions();
+
+      if (BatchCatEdge.sessions.ContainsKey(key)) {
+        session = BatchCatEdge.sessions[key];
+        session.time = DateTime.Now;
+      } else {
+        session = new Session(iniDir, username, password);
+        BatchCatEdge.sessions.Add(key, session);
+      }
+
+      return session;
+
+      
+    }
+    
+    #pragma warning disable CS1998
+      public async Task<object> SetSessionOptions(dynamic input) {
+      this.sessionTimeoutMillis = input.sessionTimeout;
+      return null;
+    }
+    
     #pragma warning disable CS1998
       public async Task<object> AddBibRecord(dynamic input) {
     
       AddBibReturnCode retval;
-      ClassBatchCat bc;
+      Session session;
       int recordId;
       string recordData = Encoding.GetEncoding(1252).GetString(Encoding.UTF8.GetBytes(input.recordData));
       int library = input.library;
@@ -62,15 +116,15 @@ namespace NatLibFi.Voyager {
       string okToExport = null;
 
       try {
-        bc = this.GetBatchCat(input.iniDir, input.username, input.password);
-      } catch (BatchCatConnectException e) {    
+        session = this.GetSession(input.iniDir, input.username, input.password);
+      } catch (ConnectException e) {    
         return new { error = new { message = e.Message, code = e.ErrorCode } } ;
       }
 
-      bc.AddBibRecord(ref recordData, ref library, ref catLocation, ref opacSuppress, ref okToExport, out retval); 
+      session.bc.AddBibRecord(ref recordData, ref library, ref catLocation, ref opacSuppress, ref okToExport, out retval); 
       
       if (retval == 0) {
-        bc.get_RecordIDAdded(out recordId);
+        session.bc.get_RecordIDAdded(out recordId);
         return new { recordId = recordId.ToString() };
       } else {
         return new { error = new { code = (int)retval, message = retval } };
@@ -80,9 +134,9 @@ namespace NatLibFi.Voyager {
 
     #pragma warning disable CS1998
       public async Task<object> UpdateBibRecord(dynamic input) {
-
+    
       UpdateBibReturnCode retval;
-      ClassBatchCat bc; 
+      Session session; 
       int recordId = input.recordId;
       string recordData = Encoding.GetEncoding(1252).GetString(Encoding.UTF8.GetBytes(input.recordData));
       DateTime updateDate = DateTime.Parse(input.updateDate);
@@ -93,12 +147,12 @@ namespace NatLibFi.Voyager {
       string exportWithNewDate = null;
       
       try {
-        bc = this.GetBatchCat(input.iniDir, input.username, input.password);
-      } catch (BatchCatConnectException e) {
+        session = this.GetSession(input.iniDir, input.username, input.password);
+      } catch (ConnectException e) {
         return new { error = new { message = e.Message, code = e.ErrorCode } };
       }
 
-      bc.UpdateBibRecord(ref recordId, ref recordData, ref updateDate, ref library, ref catLocation, ref opacSuppress, ref okToExport, ref exportWithNewDate, out retval);      
+      session.bc.UpdateBibRecord(ref recordId, ref recordData, ref updateDate, ref library, ref catLocation, ref opacSuppress, ref okToExport, ref exportWithNewDate, out retval);      
       return retval == 0 ? null : new { error = new { code = (int)retval, message = retval } };
       
     }
@@ -107,16 +161,16 @@ namespace NatLibFi.Voyager {
       public async Task<object> DeleteBibRecord(dynamic input) {
     
       DeleteBibReturnCode retval;
-      ClassBatchCat bc;
+      Session session;
       int recordId = input.recordId;
     
       try {
-        bc = this.GetBatchCat(input.iniDir, input.username, input.password);
-      } catch (BatchCatConnectException e) {
+        session = this.GetSession(input.iniDir, input.username, input.password);
+      } catch (ConnectException e) {
         return new { error = new { message = e.Message, code = e.ErrorCode } } ;        
       }
     
-      bc.DeleteBibRecord(ref recordId, out retval); 
+      session.bc.DeleteBibRecord(ref recordId, out retval); 
       return retval == 0 ? null : new { error = new {code = (int)retval, message = retval } };
     
     }
