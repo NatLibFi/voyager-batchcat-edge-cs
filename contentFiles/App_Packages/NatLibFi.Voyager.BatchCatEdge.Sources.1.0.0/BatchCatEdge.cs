@@ -247,6 +247,83 @@ namespace NatLibFi.Voyager {
     }
     
 
+
+
+    #pragma warning disable CS1998
+      public async Task<object> AddHoldingRecord(dynamic input) {
+    
+      AddHoldingReturnCode retval;
+      Session session;
+      int recordId;
+
+      string recordData = Encoding.GetEncoding(1252).GetString(Encoding.UTF8.GetBytes(input.recordData));
+      int relatedRecordId = input.relatedRecordId;
+      int catLocation = input.catLocation;
+      bool opacSuppress = input.opacSuppress;
+      int holdLocation = input.holdLocation;
+      string okToExport = null;
+
+      try {
+        session = this.GetSession(input.iniDir, input.username, input.password);
+      } catch (ConnectException e) {    
+        return new { error = new { message = e.Message, code = e.ErrorCode } } ;
+      }
+
+      session.bc.AddHoldingRecord(ref recordData, ref relatedRecordId, ref catLocation, ref opacSuppress, ref holdLocation, ref okToExport, out retval); 
+      
+      if (retval == 0) {
+        session.bc.get_RecordIDAdded(out recordId);
+        return new { recordId = recordId.ToString() };
+      } else {
+        return new { error = new { code = (int)retval, message = retval } };
+      }
+     
+    }
+
+    #pragma warning disable CS1998
+      public async Task<object> UpdateHoldingRecord(dynamic input) {
+    
+      UpdateHoldingReturnCode retval;
+      Session session; 
+      int recordId = input.recordId;
+      string recordData = Encoding.GetEncoding(1252).GetString(Encoding.UTF8.GetBytes(input.recordData));
+      DateTime updateDate = DateTime.Parse(input.updateDate);
+      int catLocation = input.catLocation;
+      int relatedRecordId = input.relatedRecordId;
+      int holdLocation = input.holdLocation;
+      bool opacSuppress = input.opacSuppress;
+      string okToExport = null;
+      string exportWithNewDate = null;
+      
+      try {
+        session = this.GetSession(input.iniDir, input.username, input.password);
+      } catch (ConnectException e) {
+        return new { error = new { message = e.Message, code = e.ErrorCode } };
+      }
+
+      session.bc.UpdateHoldingRecord(ref recordId, ref recordData, ref updateDate, ref catLocation, ref relatedRecordId, ref holdLocation, ref opacSuppress, ref okToExport, ref exportWithNewDate, out retval);      
+      return retval == 0 ? null : new { error = new { code = (int)retval, message = retval } };
+      
+    }
+    
+    #pragma warning disable CS1998
+      public async Task<object> DeleteHoldingRecord(dynamic input) {
+    
+      DeleteHoldingReturnCode retval;
+      Session session;
+      int recordId = input.recordId;
+    
+      try {
+        session = this.GetSession(input.iniDir, input.username, input.password);
+      } catch (ConnectException e) {
+        return new { error = new { message = e.Message, code = e.ErrorCode } } ;        
+      }
+    
+      session.bc.DeleteHoldingRecord(ref recordId, out retval); 
+      return retval == 0 ? null : new { error = new {code = (int)retval, message = retval } };
+    
+    }
+
   }
   
 }
